@@ -1,31 +1,37 @@
-# This is a basic workflow to help you get started with Actions
-
 name: Trigger On Push
 
-# Controls when the workflow will run
 on:
-  # Triggers the workflow on push or pull request events but only for the "main" branch
   push:
     branches: [ "main" ]
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # This workflow contains a single job called "build"
-  build:
-    # The type of runner that the job will run on
+  call_test_api:
     runs-on: ubuntu-latest
+    environment: PROD
 
-    # Steps represent a sequence of tasks that will be executed as part of the job
+    env:
+      CLIENT_ID: ${{ secrets.CLIENT_ID }}
+      CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
+      SCOPE: "TM.Projects TM.Projects.Read TM.Projects.Write TM.TestCases TM.TestCases.Read TM.TestCases.Write TM.TestExecutions TM.TestExecutions.Read TM.TestExecutions.Write TM.TestSets TM.TestSets.Read TM.TestSets.Write"
+      TOKEN_URL: "https://cloud.uipath.com/identity_/connect/token"
+      API_URL: "https://cloud.uipath.com/interikeagroup/Test/testmanager_/api/v2"
+
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v4
+      - name: Check out repository
+        uses: actions/checkout@v4
 
-      # Runs a single command using the runners shell
-      - name: Run a one-line script
-        run: echo Hello, world!
+      - name: Install jq
+        run: sudo apt-get install jq
+
+      - name: Obtain OAuth Access Token
+        id: get_token
+        run: |
+          response=$(curl -s -X POST "$TOKEN_URL" -H "Content-Type: application/x-www-form-urlencoded" -d "client_id=$CLIENT_ID&client_secret=$CLIENT_SECRET&grant_type=client_credentials&scope=$SCOPE")
+          token=$(echo $response | jq -r '.access_token')
+          echo "ACCESS_TOKEN=$token" >> $GITHUB_ENV
 
       # Runs a set of commands using the runners shell
       - name: Run a multi-line script

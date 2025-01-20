@@ -34,5 +34,7 @@ jobs:
 
       - name: List projects
         run: |
-          response=$(curl -v -X GET "$API_URL/Projects" -H "Authorization: Bearer ${{ env.ACCESS_TOKEN }}" -H "Accept: application/json" )
+          echo "Access token: $ACCESS_TOKEN"
+          echo "Url: $API_URL/Projects"
+          response=$(curl -v -X GET "$API_URL/Projects" -H "Authorization: Bearer ${{ env.ACCESS_TOKEN }}" -H "Accept: application/json")
           echo "Response: $response"

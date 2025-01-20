@@ -26,18 +26,17 @@ jobs:
       - name: Install jq
         run: sudo apt-get install jq
 
-      - name: Obtain OAuth Access Token
+      - name: Get bearer token
         id: get_token
         run: |
           response=$(curl -s -X POST "$TOKEN_URL" -H "Content-Type: application/x-www-form-urlencoded" -d "client_id=$CLIENT_ID&client_secret=$CLIENT_SECRET&grant_type=client_credentials&scope=$SCOPE")
           token=$(echo $response | jq -r '.access_token')
-          echo $response
-          echo "ACCESS_TOKEN=$token"
-          echo $token
-          echo $ACCESS_TOKEN
+          echo "ACCESS_TOKEN=$token" >> $GITHUB_OUTPUT
 
-      # Runs a set of commands using the runners shell
-      - name: Run a multi-line script
+      - name: List projects
+        id: list_projects
         run: |
-          echo Add other actions to build,
-          echo test, and deploy your project.
+          response=$(curl -s -X GET "$API_URL/Projects" /
+            -H "Accept: application/json" 
+            -H "Authorization: Bearer ${{ env.ACCESS_TOKEN }}" )
+          echo "Response: $response"

@@ -58,6 +58,8 @@ jobs:
         run: |
           response=$(curl --silent --write-out "\n%{http_code}" --request GET "$API_URL/$PROJECT_ID/TestSets/$TESTSET_ID/StartExecute?executionType=automated" --header "Authorization: Bearer ${{ env.ACCESS_TOKEN }}" -H "Accept: application/json")
 
+          echo $response
+
           status_code=$(echo "$response" | tail -n1)
           response_body=$(echo "$response" | sed '$d')
 

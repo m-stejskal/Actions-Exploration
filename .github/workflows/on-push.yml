@@ -42,7 +42,7 @@ jobs:
             echo "ACCESS_TOKEN=$token" >> $GITHUB_ENV
           else
             echo $response_body
-            Exit 1
+            exit 1
           fi
 
   list-projects:

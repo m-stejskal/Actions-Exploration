@@ -34,13 +34,16 @@ jobs:
       - name: Get API token
         run: |
           response=$(curl --silent --write-out "\n%{http_code}" --request POST "$TOKEN_URL" --header "Content-Type: application/x-www-form-urlencoded" --data "client_id=$CLIENT_ID&client_secret=$CLIENT_SECRET&grant_type=client_credentials&scope=$SCOPE")
-          echo $response
-          response_body=$(echo "$response" | sed '$d')  # Remove last line (status code)
-          status_code=$(echo "$response" | tail -n1)   # Get last line (status code)
-          echo $response_body
-          echo $status_code
-          token=$(echo $status_code | jq -r '.access_token')          
-          echo "ACCESS_TOKEN=$token" >> $GITHUB_ENV
+          status_code=$(echo "$response" | tail -n1)
+          response_body=$(echo "$response" | sed '$d')
+
+          if [ "$status_code" -eq 200 ]; then
+            token=$(echo $response_body | jq -r '.access_token')
+            echo "ACCESS_TOKEN=$token" >> $GITHUB_ENV
+          else
+            echo $response_body
+            Exit 1
+          fi
 
   list-projects:
     env:

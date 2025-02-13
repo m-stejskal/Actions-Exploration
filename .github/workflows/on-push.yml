@@ -47,6 +47,7 @@ jobs:
           fi
 
   execute-testset:
+    environment: PROD
     env:
       API_URL: "https://cloud.uipath.com/interikeagroup/Test/testmanager_/api/v2"
       PROJECT_ID: "ec112443-b64f-0000-3ebf-0b47bf77aa0b"

@@ -46,13 +46,25 @@ jobs:
             exit 1
           fi
 
-  list-projects:
+  execute-testset:
     env:
       API_URL: "https://cloud.uipath.com/interikeagroup/Test/testmanager_/api/v2"
+      PROJECT_ID: "ec112443-b64f-0000-3ebf-0b47bf77aa0b"
+      TESTSET_ID: "3bd2c668-751d-0100-38f6-0b47c9b39dd2"
     runs-on: ubuntu-latest
     needs: get-api-token
     steps:
-      - name: List projects
+      - name: Execute test set
         run: |
-          response=$(curl -s -w "\n%{http_code}" -X GET "$API_URL/Projects" -H "Authorization: Bearer ${{ env.ACCESS_TOKEN }}" -H "Accept: application/json")
-          echo "Response: $response"
+          response=$(curl --silent --write-out "\n%{http_code}" --request GET "$API_URL/$PROJECT_ID/TestSets/$TESTSET_ID/StartExecute?executionType=automated" --header "Authorization: Bearer ${{ env.ACCESS_TOKEN }}" -H "Accept: application/json")
+
+          status_code=$(echo "$response" | tail -n1)
+          response_body=$(echo "$response" | sed '$d')
+
+          if [ "$status_code" -eq 200 ]; then
+            token=$(echo $response_body | jq -r '.access_token')
+            echo $response_body
+          else
+            echo $response_body
+            exit 1
+          fi

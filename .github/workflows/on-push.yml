@@ -56,7 +56,7 @@ jobs:
     steps:
       - name: Execute test set
         run: |
-          response=$(curl --silent --write-out "\n%{http_code}" --request GET "$API_URL/$PROJECT_ID/TestSets/$TESTSET_ID/StartExecute?executionType=automated" --header "Authorization: Bearer ${{ env.ACCESS_TOKEN }}" -H "Accept: application/json")
+          response=$(curl --silent --write-out "\n%{http_code}" --request POST "$API_URL/$PROJECT_ID/TestSets/$TESTSET_ID/StartExecute?executionType=automated" --header "Authorization: Bearer ${{ env.ACCESS_TOKEN }}" -H "Accept: application/json")
 
           echo $response
 

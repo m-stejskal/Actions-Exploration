@@ -61,8 +61,7 @@ jobs:
           status_code=$(echo "$response" | tail -n1)
           response_body=$(echo "$response" | sed '$d')
 
-          if [ "$status_code" -eq 200 ]; then
-            token=$(echo $response_body | jq -r '.access_token')
+          if [ "$status_code" -eq 201 ]; then
             echo $response_body
           else
             echo $response_body

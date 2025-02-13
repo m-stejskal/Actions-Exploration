@@ -22,6 +22,7 @@ jobs:
         run: sudo apt-get install jq
 
   get-api-token:
+    environment: PROD
     env:
       CLIENT_ID: ${{ secrets.CLIENT_ID }}
       CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}

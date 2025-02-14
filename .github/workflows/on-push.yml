@@ -43,7 +43,7 @@ jobs:
 
           if [ "$status_code" -eq 200 ]; then
             token=$(echo $response_body | jq -r '.access_token')
-            echo "::set-output name=access_token::$token"
+            echo "access_token=$token" >> $GITHUB_OUTPUT
           else
             echo $response_body
             exit 1

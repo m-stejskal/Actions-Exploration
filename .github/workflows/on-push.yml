@@ -166,11 +166,18 @@ jobs:
             sleep $RESULT_CHECK_FREQUENCY
           done
 
-          
+  rollback:
+    needs: check-execution
+    if: failure()
+    runs-on: ubuntu-latest
 
-          
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
 
-          
-
-          
-
+    - name: Rollback to previous version
+      run: |
+        # Retrieve the previous tag
+        latest_tag=$(git describe --tags `git rev-list --tags --max-count=1`)
+        echo "Rolling back to $latest_tag"
+        git checkout $latest_tag

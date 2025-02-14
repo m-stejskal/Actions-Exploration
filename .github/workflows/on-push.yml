@@ -96,3 +96,60 @@ jobs:
             echo $response_body
             exit 1
           fi
+
+  check-execution:
+    environment: PROD
+    env:
+      CLIENT_ID: ${{ secrets.CLIENT_ID }}
+      CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
+      SCOPE: ${{ vars.API_SCOPE }}
+      TOKEN_URL: ${{ vars.TOKEN_URL }}
+      API_URL: ${{ vars.API_URL }}
+      PROJECT_ID: ${{ vars.PROJECT_ID }}
+      TESTSET_ID: ${{ vars.TESTSET_ID }}
+    runs-on: ubuntu-latest
+    needs: execute-testset
+    steps:
+      - name: Get API token
+        run: |
+          response=$(
+            curl --silent --write-out "\n%{http_code}" \
+              --request POST "$TOKEN_URL" \
+              -H "Content-Type: application/x-www-form-urlencoded" \
+              --data "client_id=$CLIENT_ID&client_secret=$CLIENT_SECRET&grant_type=client_credentials&scope=$SCOPE"
+          )
+          
+          status_code=$(echo "$response" | tail -n1)
+          response_body=$(echo "$response" | sed '$d')
+
+          if [ "$status_code" -eq 200 ]; then
+            token=$(echo $response_body | jq -r '.access_token')
+            echo "ACCESS_TOKEN=$token" >> $GITHUB_ENV
+          else
+            echo $response_body
+            exit 1
+          fi
+
+      - name: Check execution status
+        run: |
+          response=$(
+            curl --silent --write-out "\n%{http_code}" \
+              --request POST "$API_URL/$PROJECT_ID/TestExecutions/$EXECUTION_ID" \
+              -H "Authorization: Bearer ${{ env.ACCESS_TOKEN }}" \
+              -H "Accept: application/json" \
+              -H "Content-Length: 0"
+          )
+
+          status_code=$(echo "$response" | tail -n1)
+          response_body=$(echo "$response" | sed '$d')
+
+          if [ "$status_code" -eq 200 ]; then
+            execution_status=$(echo $response_body | jq -r '.status')
+            echo "EXECUTION_STATUS=$execution_status" >> $GITHUB_ENV
+            echo $response_body
+            echo $execution_status
+          else
+            echo $response_body
+            exit 1
+          fi
+

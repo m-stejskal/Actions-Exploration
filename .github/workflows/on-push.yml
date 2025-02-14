@@ -168,7 +168,7 @@ jobs:
 
   rollback:
     needs: check-execution
-    if: needs.check-execution.result == 'failure'
+    if: failure()
     runs-on: ubuntu-latest
 
     steps:

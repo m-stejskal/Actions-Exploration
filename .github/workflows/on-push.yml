@@ -33,6 +33,8 @@ jobs:
       TESTSET_ID: ${{ vars.TESTSET_ID }}
     runs-on: ubuntu-latest
     needs: install-jq
+    outputs:
+      execution_id: ${{ steps.execute-testset.outputs.execution_id }}
     steps:
       - name: Get API token
         run: |
@@ -55,6 +57,7 @@ jobs:
           fi
           
       - name: Execute test set
+        id: execute-testset
         run: |
           response=$(
             curl --silent --write-out "\n%{http_code}" \
@@ -70,7 +73,7 @@ jobs:
           if [ "$status_code" -eq 201 ]; then
             execution_id=$(echo $response_body | jq -r '.id')
             echo $execution_id
-            echo "EXECUTION_ID=$execution_id" >> $GITHUB_ENV
+            echo "execution_id=$execution_id" >> "$GITHUB_OUTPUT"
           else
             echo $response_body
             exit 1
@@ -78,6 +81,8 @@ jobs:
 
   check-execution:
     environment: PROD
+    runs-on: ubuntu-latest
+    needs: execute-testset
     env:
       CLIENT_ID: ${{ secrets.CLIENT_ID }}
       CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
@@ -86,8 +91,9 @@ jobs:
       API_URL: ${{ vars.API_URL }}
       PROJECT_ID: ${{ vars.PROJECT_ID }}
       TESTSET_ID: ${{ vars.TESTSET_ID }}
-    runs-on: ubuntu-latest
-    needs: execute-testset
+
+      EXECUTION_ID: ${{needs.execute-testset.outputs.execution_id}}
+
     steps:
       - name: Get API token
         run: |
@@ -111,6 +117,7 @@ jobs:
 
       - name: Check execution status
         run: |
+          echo "$EXECUTION_ID"
           echo "$API_URL/$PROJECT_ID/TestExecutions/$EXECUTION_ID"
 
           response=$(

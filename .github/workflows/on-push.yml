@@ -21,35 +21,6 @@ jobs:
       - name: Install jq
         run: sudo apt-get install jq
 
-  get-api-token:
-    environment: PROD
-    env:
-      CLIENT_ID: ${{ secrets.CLIENT_ID }}
-      CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
-      SCOPE: ${{ vars.API_SCOPE }}
-      TOKEN_URL: ${{ vars.TOKEN_URL }}
-      API_URL: ${{ vars.API_URL }}
-    runs-on: ubuntu-latest
-    needs: install-jq
-    outputs:
-      access_token: ${{ steps.get-token.outputs.access_token }}
-    steps:
-      - name: Get API token
-        id: get-token
-        run: |
-          response=$(curl --silent --write-out "\n%{http_code}" --request POST "$TOKEN_URL" --header "Content-Type: application/x-www-form-urlencoded" --data "client_id=$CLIENT_ID&client_secret=$CLIENT_SECRET&grant_type=client_credentials&scope=$SCOPE")
-          status_code=$(echo "$response" | tail -n1)
-          response_body=$(echo "$response" | sed '$d')
-
-          if [ "$status_code" -eq 200 ]; then
-            token=$(echo $response_body | jq -r '.access_token')
-            echo $token
-            echo "access_token=$token" >> $GITHUB_OUTPUT
-          else
-            echo $response_body
-            exit 1
-          fi
-
   execute-testset:
     environment: PROD
     env:
@@ -97,7 +68,30 @@ jobs:
           response_body=$(echo "$response" | sed '$d')
 
           if [ "$status_code" -eq 201 ]; then
+            execution_id=$(echo $response_body | jq -r '.id')
+            echo "EXECUTION_ID=$execution_id" >> $GITHUB_ENV
+          else
             echo $response_body
+            exit 1
+          fi
+
+      - name: Check execution status
+        run: |
+          response=$(
+            curl --silent --write-out "\n%{http_code}" \
+              --request POST "$API_URL/$PROJECT_ID/TestExecutions/$EXECUTION_ID" \
+              -H "Authorization: Bearer ${{ env.ACCESS_TOKEN }}" \
+              -H "Accept: application/json"
+          )
+
+          status_code=$(echo "$response" | tail -n1)
+          response_body=$(echo "$response" | sed '$d')
+
+          if [ "$status_code" -eq 200 ]; then
+            execution_status=$(echo $response_body | jq -r '.status')
+            echo "EXECUTION_STATUS=$execution_status" >> $GITHUB_ENV
+            echo $response_body
+            echo $execution_status
           else
             echo $response_body
             exit 1

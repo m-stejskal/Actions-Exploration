@@ -177,8 +177,6 @@ jobs:
 
       - name: Rollback to previous version
         run: |
-          # Retrieve the previous commit
-          previous_commit=$(git rev-parse HEAD^)
-          echo "Rollback to previous commit: $previous_commit"
-          git checkout $previous_commit
-          echo "Rollback job succeeded."
+          git revert --no-edit HEAD
+          git push
+          echo "Reverted"

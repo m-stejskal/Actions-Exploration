@@ -131,6 +131,9 @@ jobs:
           status_code=$(echo "$response" | tail -n1)
           response_body=$(echo "$response" | sed '$d')
 
+          echo $status_code
+          echo $response_body
+
           if [ "$status_code" -eq 200 ]; then
             execution_status=$(echo $response_body | jq -r '.status')
             echo "EXECUTION_STATUS=$execution_status" >> $GITHUB_ENV

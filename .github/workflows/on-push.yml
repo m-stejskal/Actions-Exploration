@@ -122,7 +122,7 @@ jobs:
 
           response=$(
             curl --silent --write-out "\n%{http_code}" \
-              --request POST "$API_URL/$PROJECT_ID/TestExecutions/${{ env.EXECUTION_ID }}" \
+              --request GET "$API_URL/$PROJECT_ID/TestExecutions/${{ env.EXECUTION_ID }}" \
               -H "Authorization: Bearer ${{ env.ACCESS_TOKEN }}" \
               -H "Accept: application/json" \
               -H "Content-Length: 0"

@@ -148,7 +148,7 @@ jobs:
                 echo "Execution finished"          
                 echo "Failed cases: $fail_count"
                 
-                if [ "$execution_status" -eq 0 ];
+                if [ "$execution_status" -eq 0 ]; then
                   exit 0
                 else
                   exit 1

@@ -126,7 +126,7 @@ jobs:
 
             response=$(
               curl --silent --write-out "\n%{http_code}" \
-                --request GET "$API_URL/$PROJECT_ID/TestExecutions/${{ env.EXECUTION_ID }}" \
+                --request GET "$API_URL/$PROJECT_ID/TestExecutions/${{ env.EXECUTION_ID }}/withstats" \
                 -H "Authorization: Bearer ${{ env.ACCESS_TOKEN }}" \
                 -H "Accept: application/json" \
                 -H "Content-Length: 0"
@@ -135,19 +135,28 @@ jobs:
             status_code=$(echo "$response" | tail -n1)
             response_body=$(echo "$response" | sed '$d')
 
-            echo $status_code
-            echo $response_body
-
             if [ "$status_code" -eq 200 ]; then
               execution_status=$(echo $response_body | jq -r '.status')
               echo $execution_status
 
-              if [ "$execution_status" == "Pending" ] || [ "$execution_status" == "Running" ]; then
-                echo "Trying again"
+              if [ "$execution_status" == "Pending" ]; then
+                echo "Execution has not started yet"
+              elif [ "$execution_status" == "Running" ]; then
+                echo "Execution is still running"                
               elif [ "$execution_status" == "Finished" ]; then
-                exit 0
-              else
-                echo "Done"
+                fail_count=$(echo $response_body | jq -r '.failed')
+                echo "Execution finished"          
+                echo "Failed cases: $fail_count"
+                
+                if [ "$execution_status" -eq 0 ];
+                  exit 0
+                else
+                  exit 1
+                fi
+
+              elif [ "$execution_status" == "Cancelled" ]; then
+                echo "Execution cancelled"
+                exit 1
               fi
             else
               echo $response_body

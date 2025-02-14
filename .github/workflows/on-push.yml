@@ -28,7 +28,7 @@ jobs:
       CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
       SCOPE: "TM.Projects TM.Projects.Read TM.Projects.Write TM.TestCases TM.TestCases.Read TM.TestCases.Write TM.TestExecutions TM.TestExecutions.Read TM.TestExecutions.Write TM.TestSets TM.TestSets.Read TM.TestSets.Write"
       TOKEN_URL: "https://cloud.uipath.com/identity_/connect/token"
-      API_URL: "https://cloud.uipath.com/interikeagroup/Test/testmanager_/api/v2"
+      API_URL: "https://cloud.uipath.com/interikeagroup/IA_Test/testmanager_/api/v2"
     runs-on: ubuntu-latest
     needs: install-jq
     outputs:

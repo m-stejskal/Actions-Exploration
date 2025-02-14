@@ -72,7 +72,7 @@ jobs:
 
           if [ "$status_code" -eq 201 ]; then
             execution_id=$(echo $response_body | jq -r '.id')
-            echo $execution_id
+            echo "Execution ID: $execution_id"
             echo "execution_id=$execution_id" >> "$GITHUB_OUTPUT"
           else
             echo $response_body
@@ -91,6 +91,9 @@ jobs:
       API_URL: ${{ vars.API_URL }}
       PROJECT_ID: ${{ vars.PROJECT_ID }}
       TESTSET_ID: ${{ vars.TESTSET_ID }}
+
+      RESULT_CHECK_MAX_COUNT: ${{ vars.RESULT_CHECK_MAX_COUNT }}
+      RESULT_CHECK_FREQUENCY: ${{ vars.RESULT_CHECK_FREQUENCY }}
 
       EXECUTION_ID: ${{needs.execute-testset.outputs.execution_id}}
 
@@ -117,30 +120,46 @@ jobs:
 
       - name: Check execution status
         run: |
-          echo "$EXECUTION_ID"
-          echo "$API_URL/$PROJECT_ID/TestExecutions/$EXECUTION_ID"
 
-          response=$(
-            curl --silent --write-out "\n%{http_code}" \
-              --request GET "$API_URL/$PROJECT_ID/TestExecutions/${{ env.EXECUTION_ID }}" \
-              -H "Authorization: Bearer ${{ env.ACCESS_TOKEN }}" \
-              -H "Accept: application/json" \
-              -H "Content-Length: 0"
-          )
+          for i in $(seq 1 $RESULT_CHECK_MAX_COUNT); do
+            echo "Iteration number $i"
 
-          status_code=$(echo "$response" | tail -n1)
-          response_body=$(echo "$response" | sed '$d')
+            response=$(
+              curl --silent --write-out "\n%{http_code}" \
+                --request GET "$API_URL/$PROJECT_ID/TestExecutions/${{ env.EXECUTION_ID }}" \
+                -H "Authorization: Bearer ${{ env.ACCESS_TOKEN }}" \
+                -H "Accept: application/json" \
+                -H "Content-Length: 0"
+            )
 
-          echo $status_code
-          echo $response_body
+            status_code=$(echo "$response" | tail -n1)
+            response_body=$(echo "$response" | sed '$d')
 
-          if [ "$status_code" -eq 200 ]; then
-            execution_status=$(echo $response_body | jq -r '.status')
-            echo "EXECUTION_STATUS=$execution_status" >> $GITHUB_ENV
+            echo $status_code
             echo $response_body
-            echo $execution_status
-          else
-            echo $response_body
-            exit 1
-          fi
+
+            if [ "$status_code" -eq 200 ]; then
+              execution_status=$(echo $response_body | jq -r '.status')
+              echo $execution_status
+
+              if [ "$execution_status" == "Pending" ] || [ "$execution_status" == "Running" ]; then
+                echo "Trying again"
+              else
+                echo "Done"
+              fi
+            else
+              echo $response_body
+              exit 1
+            fi
+
+            sleep $RESULT_CHECK_FREQUENCY
+          done
+
+          
+
+          
+
+          
+
+          
 

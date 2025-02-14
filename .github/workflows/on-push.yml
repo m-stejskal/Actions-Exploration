@@ -69,6 +69,7 @@ jobs:
 
           if [ "$status_code" -eq 201 ]; then
             execution_id=$(echo $response_body | jq -r '.id')
+            echo $execution_id
             echo "EXECUTION_ID=$execution_id" >> $GITHUB_ENV
           else
             echo $response_body
@@ -110,6 +111,8 @@ jobs:
 
       - name: Check execution status
         run: |
+          echo "$API_URL/$PROJECT_ID/TestExecutions/$EXECUTION_ID"
+
           response=$(
             curl --silent --write-out "\n%{http_code}" \
               --request POST "$API_URL/$PROJECT_ID/TestExecutions/$EXECUTION_ID" \

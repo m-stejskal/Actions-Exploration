@@ -43,6 +43,7 @@ jobs:
 
           if [ "$status_code" -eq 200 ]; then
             token=$(echo $response_body | jq -r '.access_token')
+            echo $token
             echo "access_token=$token" >> $GITHUB_OUTPUT
           else
             echo $response_body
@@ -62,10 +63,12 @@ jobs:
         env:
           ACCESS_TOKEN: ${{ needs.get-api-token.outputs.access_token }}
         run: |
+          echo $ACCESS_TOKEN     
+          
           response=$(
             curl --silent --write-out "\n%{http_code}" \
               --request POST "$API_URL/$PROJECT_ID/TestSets/$TESTSET_ID/StartExecute?executionType=automated" \
-              -H "Authorization: Bearer ${{ env.ACCESS_TOKEN }}" \
+              -H "Authorization: Bearer ${{ $ACCESS_TOKEN }}" \
               -H "Accept: application/json" \
               -H "Content-Length: 0"
           )

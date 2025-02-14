@@ -144,6 +144,8 @@ jobs:
 
               if [ "$execution_status" == "Pending" ] || [ "$execution_status" == "Running" ]; then
                 echo "Trying again"
+              elif [ "$execution_status" == "Finished" ]; then
+                exit 0
               else
                 echo "Done"
               fi

@@ -168,16 +168,17 @@ jobs:
 
   rollback:
     needs: check-execution
-    if: failure()
+    if: needs.check-execution.result == 'failure'
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v2
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-    - name: Rollback to previous version
-      run: |
-        # Retrieve the previous tag
-        latest_tag=$(git describe --tags `git rev-list --tags --max-count=1`)
-        echo "Rolling back to $latest_tag"
-        git checkout $latest_tag
+      - name: Rollback to previous version
+        run: |
+          # Retrieve the previous commit
+          previous_commit=$(git rev-parse HEAD^)
+          echo "Rollback to previous commit: $previous_commit"
+          git checkout $previous_commit
+          echo "Rollback job succeeded."
